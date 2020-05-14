@@ -1,7 +1,7 @@
 import axios from 'axios';
 import config from '../config';
 import { Player } from '../models/Player';
-import { UTRProfile } from '../models/UTRProfile';
+import { UTREntry } from '../models/UTREntry';
 
 export class UTR {
 	private jwt: string | null = null;
@@ -32,39 +32,32 @@ export class UTR {
 
 		const responseProfiles = res.data.hits.map(h => h.source);
 
-		// do not insert new data for pre-existing profiles
-		const existingProfiles = await UTRProfile.findAll({
+		const profileIds = responseProfiles.map(p => p.id);
+
+		// find all players that already exist
+		const existingPlayers = await Player.findAll({
 			where: {
-				id: responseProfiles.map(p => p.id)
+				utrProfileId: profileIds
 			}
 		});
-		const existingIds = existingProfiles.map(p => p.id);
-		const newProfileData = responseProfiles.filter(p => !existingIds.includes(p.id));
+		const existingPlayerIds = existingPlayers.map(p => p.id);
 
-		// all UTRProfiles must have associated Players, so create those first
+		// create new players if there aren't any associated with the given UTR profile
 		const newPlayers = await Player.bulkCreate(
-			newProfileData.map(p => ({
-				name: p.displayName,
-				utrProfileId: null // will set after creating new profiles
-			}))
+			responseProfiles
+				.filter(p => !existingPlayerIds.includes(p.id))
+				.map(p => ({ name: p.displayName, utrProfileId: p.id }))
 		);
 
-		const zipped = newPlayers.map((player, i) => [player, newProfileData[i]] as const);
+		const allPlayers = existingPlayers.concat(newPlayers);
 
-		await UTRProfile.bulkCreate(
-			zipped.map(([player, profile]) => ({
-				id: profile.id,
-				singlesRating: profile.singlesUtr,
-				playerId: player.id
+		// save all the entries
+		await UTREntry.bulkCreate(
+			responseProfiles.map(p => ({
+				playerId: allPlayers.find(pl => pl.utrProfileId === p.id)!.id,
+				utrId: p.id,
+				singlesRating: p.singlesUtr
 			}))
-		);
-
-		await Player.bulkCreate(
-			zipped.map(([player, profile]) => ({
-				id: player.id,
-				utrProfileId: profile.id
-			})),
-			{ updateOnDuplicate: ["utrProfileId"] } // turns into a bulk update
 		);
 	}
 }

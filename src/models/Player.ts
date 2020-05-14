@@ -1,5 +1,5 @@
-import { AutoIncrement, Column, DataType, ForeignKey, HasOne, Model, PrimaryKey, Table } from 'sequelize-typescript';
-import { UTRProfile } from './UTRProfile';
+import { AutoIncrement, Column, DataType, HasMany, Model, PrimaryKey, Table, Unique } from 'sequelize-typescript';
+import { UTREntry } from './UTREntry';
 
 @Table
 export class Player extends Model<Player> {
@@ -11,10 +11,10 @@ export class Player extends Model<Player> {
 	@Column
 	name: string;
 
-	@ForeignKey(() => UTRProfile)
+	@Unique
 	@Column(DataType.INTEGER) // null messes with the type inference
 	utrProfileId: number | null;
 
-	@HasOne(() => UTRProfile)
-	utrProfile: UTRProfile | null;
+	@HasMany(() => UTREntry)
+	utrEntries: UTREntry[];
 }

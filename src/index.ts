@@ -18,7 +18,7 @@ export function handler() {
 (async () => {
 	await sequelize.authenticate();
 	console.log('authenticated');
-	await sequelize.sync();
+	await sequelize.sync({ force: true });
 
 	const utr = new UTR();
 	await utr.login();
