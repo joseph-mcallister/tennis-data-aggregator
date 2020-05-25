@@ -14,7 +14,22 @@ export class Player extends Model<Player> {
 	@Unique
 	@Column(DataType.INTEGER) // null messes with the type inference
 	utrProfileId: number | null;
-
+  
 	@HasMany(() => UTREntry)
 	utrEntries: UTREntry[];
+
+	@Column
+	gradClassName: string;
+
+	@Column
+	gradYear: Date;
+
+	@Column
+	location: string;
+
+	@Column(DataType.DOUBLE)
+	latitude: number;
+
+	@Column(DataType.DOUBLE)
+	longitude: number;
 }

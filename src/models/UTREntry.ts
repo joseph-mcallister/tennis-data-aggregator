@@ -6,7 +6,8 @@ import {
 	BelongsTo,
 	ForeignKey,
 	AutoIncrement,
-	CreatedAt
+	CreatedAt,
+	DataType
 } from 'sequelize-typescript';
 import { Player } from './Player';
 
@@ -23,8 +24,11 @@ export class UTREntry extends Model<UTREntry> {
 	@CreatedAt
 	createdAt: Date;
 
-	@Column
+	@Column(DataType.DOUBLE)
 	singlesRating: number;
+
+	@Column(DataType.DOUBLE)
+	doublesRating: number;
 
 	@ForeignKey(() => Player)
 	@Column
