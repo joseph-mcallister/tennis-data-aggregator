@@ -19,7 +19,7 @@ export class UTREntry extends Model<UTREntry> {
 	id: number;
 
 	@Column
-	utrId: number;
+	utrProfileId: number;
 
 	@CreatedAt
 	createdAt: Date;

@@ -19,7 +19,7 @@ export class ITFEntry extends Model<ITFEntry> {
 	id: number;
 
 	@Column
-	itfId: number;
+	itfProfileId: number;
 
 	@CreatedAt
 	createdAt: Date;

@@ -71,7 +71,7 @@ export class UTR {
 			await UTREntry.bulkCreate(
 				responseProfiles.map(p => ({
 					playerId: allPlayers.find(pl => pl.utrProfileId === p.id)!.id,
-					utrId: p.id,
+					utrProfileId: p.id,
 					singlesRating: p.myUtrSingles,
 					doublesRating: p.myUtrDoubles
 				}))

@@ -19,13 +19,13 @@ export function handler() {
 (async () => {
 	await sequelize.authenticate();
 	console.log('authenticated');
-	// await sequelize.sync({ force: true });
+	await sequelize.sync({ force: true });
 
 
 	/** Universal Tennis Rating (UTR) */
 	const utr = new UTR();
 	await utr.login();
-	// await utr.syncTopPlayers();
+	await utr.syncTopPlayers();
 
 	/** International Tennis Federation (ITF) */
 	const itf = new ITF();
