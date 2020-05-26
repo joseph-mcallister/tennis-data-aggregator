@@ -14,6 +14,10 @@ export class Player extends Model<Player> {
 	@Unique
 	@Column(DataType.INTEGER) // null messes with the type inference
 	utrProfileId: number | null;
+
+	@Unique
+	@Column(DataType.INTEGER) // null messes with the type inference
+	itfProfileId: number | null;
   
 	@HasMany(() => UTREntry)
 	utrEntries: UTREntry[];
