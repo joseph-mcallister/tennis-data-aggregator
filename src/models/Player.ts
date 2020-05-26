@@ -25,6 +25,9 @@ export class Player extends Model<Player> {
 	gradYear: Date;
 
 	@Column
+	birthday: Date;
+
+	@Column
 	location: string;
 
 	@Column(DataType.DOUBLE)
