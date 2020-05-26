@@ -19,6 +19,7 @@ export class ITF {
             const res = await axios.get('https://www.itftennis.com/Umbraco/Api/PlayerApi/GetPlayerSearch?searchString=lev%20kazakov')
             console.log(res.data);
             // ROBOTS file causing problems...need to use cheerio
+            // Website URL: https://www.itftennis.com/en/players/
         }
     }
     
