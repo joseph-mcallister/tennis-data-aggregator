@@ -2,6 +2,7 @@ import { Sequelize } from 'sequelize-typescript';
 import config from './config';
 import { UTR } from './sources/utr';
 import { ITF } from './sources/itf';
+import { TR } from './sources/tr';
 
 // TODO: Secrets, DB auth
 
@@ -23,11 +24,15 @@ export function handler() {
 
 
 	/** Universal Tennis Rating (UTR) */
-	const utr = new UTR();
-	await utr.login();
-	await utr.syncTopPlayers();
+	// const utr = new UTR();
+	// await utr.login();
+	// await utr.syncTopPlayers();
+
+	/** Tennis Recruiting (TR) */
+	const tr = new TR();
 
 	/** International Tennis Federation (ITF) */
-	const itf = new ITF();
-	await itf.searchBirthDays();
+	// const itf = new ITF();
+	// await itf.searchBirthDays();
+
 })();
