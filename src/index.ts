@@ -19,7 +19,7 @@ export function handler() {
 (async () => {
 	await sequelize.authenticate();
 	console.log('authenticated');
-	await sequelize.sync({ force: true });
+	await sequelize.sync();
 
 
 	/** Universal Tennis Rating (UTR) */
