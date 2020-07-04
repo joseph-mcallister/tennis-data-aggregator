@@ -14,14 +14,13 @@ const sequelize = new Sequelize({
 
 // Default Lambda handler is `index.handler`
 export function handler() {
-	console.log("Hello, world!");
+	console.log('Hello, world!');
 }
 
 (async () => {
 	await sequelize.authenticate();
 	console.log('authenticated');
 	await sequelize.sync();
-
 
 	/** Universal Tennis Rating (UTR) */
 	// const utr = new UTR();
@@ -30,9 +29,9 @@ export function handler() {
 
 	/** Tennis Recruiting (TR) */
 	const tr = new TR();
+	await tr.getTop200('test');
 
 	/** International Tennis Federation (ITF) */
 	// const itf = new ITF();
 	// await itf.searchBirthDays();
-
 })();
