@@ -18,9 +18,9 @@ export function handler() {
 }
 
 (async () => {
-	await sequelize.authenticate();
-	console.log('authenticated');
-	await sequelize.sync();
+	// await sequelize.authenticate();
+	// console.log('authenticated');
+	// await sequelize.sync();
 
 	/** Universal Tennis Rating (UTR) */
 	// const utr = new UTR();
@@ -29,7 +29,7 @@ export function handler() {
 
 	/** Tennis Recruiting (TR) */
 	const tr = new TR();
-	await tr.getTop200('test');
+	await tr.getTop200();
 
 	/** International Tennis Federation (ITF) */
 	// const itf = new ITF();
