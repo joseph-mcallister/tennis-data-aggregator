@@ -10,9 +10,15 @@ export class TR {
 	page: puppeteer.Page;
 
 	homepage = 'https://www.tennisrecruiting.net';
-	classListUrls = [
-		'https://www.tennisrecruiting.net/list.asp?id=1236&order=rank', // Class of 2023
-		'https://www.tennisrecruiting.net/list.asp?id=1226&order=rank' // Class of 2022
+	classLists = [
+		{
+			gradYear: 2023,
+			url: 'https://www.tennisrecruiting.net/list.asp?id=1236&order=rank'
+		},
+		{
+			gradYear: 2022,
+			url: 'https://www.tennisrecruiting.net/list.asp?id=1226&order=rank'
+		}
 	];
 	playerPageUrl = 'https://www.tennisrecruiting.net/player.asp?id=806092';
 
@@ -49,12 +55,25 @@ export class TR {
 		await this._setup();
 		await this._signIn();
 
-		for (const classListUrl of this.classListUrls) {
-			for (let i = 1; i <= 2; i++) {
-				await this.page.goto(`${classListUrl}&page=${i}`);
-				await this.page.screenshot({ path: `players-${i}.png` });
+		for (const classList in this.classLists) {
+			for (let page = 1; page <= 2; page++) {
+				const url = this.classLists[classList].url;
+				const gradYear = this.classLists[classList].gradYear;
+				await this.page.goto(`${url}&page=${page}`);
+				await this.page.screenshot({ path: `players-${page}.png` });
 				const playerIds = await this._getPlayerIdsFromTable();
 				console.log(playerIds);
+
+				/**
+				 * TODO:
+				 * Load player page
+				 * Parse data for name, location
+				 * Parse data for national ranking, highest rankings jump
+				 * Fuzzy match on player name; add tr id to Player table or insert new row
+				 * Insert TR row with ranking and set jump amount (+- integer)
+				 * Write query to get all top 150 not in UTR table
+				 * Write query to get all considerable jumps
+				 */
 			}
 		}
 	}

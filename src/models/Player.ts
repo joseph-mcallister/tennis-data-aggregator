@@ -1,4 +1,13 @@
-import { AutoIncrement, Column, DataType, HasMany, Model, PrimaryKey, Table, Unique } from 'sequelize-typescript';
+import {
+	AutoIncrement,
+	Column,
+	DataType,
+	HasMany,
+	Model,
+	PrimaryKey,
+	Table,
+	Unique
+} from 'sequelize-typescript';
 import { UTREntry } from './UTREntry';
 
 @Table
@@ -18,7 +27,11 @@ export class Player extends Model<Player> {
 	@Unique
 	@Column(DataType.INTEGER) // null messes with the type inference
 	itfProfileId: number | null;
-  
+
+	@Unique
+	@Column(DataType.INTEGER) // null messes with the type inference
+	trProfileId: number | null;
+
 	@HasMany(() => UTREntry)
 	utrEntries: UTREntry[];
 
