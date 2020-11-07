@@ -24,6 +24,24 @@ export class UTR {
 		};
 	}
 
+	async fetchPlayers(minUtr: number, maxUtr: number, step = 0.02, primaryTags = `Junior`) {
+		const results: UTRSource[] = [];
+		for (let currMin = minUtr; currMin + step < maxUtr; currMin += step) {
+			console.log({ currMin, currMax: currMin + step });
+			const res = await axios.get<UTRResponse>(
+				'https://agw-prod.myutr.com/v2/search/players' +
+					`?top=100&skip=0&gender=M&primaryTags=${primaryTags}&utrMin=${currMin}&utrMax=${
+						currMin + step
+					}&utrType=verified&utrTeamType=singles`,
+				{ headers: this.headers }
+			);
+			res.data.hits.forEach(hit => {
+				results.push(hit.source);
+			});
+		}
+		return results;
+	}
+
 	async syncTopPlayers() {
 		const minUtr = 11.0;
 		const maxUtr = 13.0;
@@ -51,16 +69,15 @@ export class UTR {
 			});
 
 			const newPlayers = await Player.bulkCreate(
-				responseProfiles
-					.map(p => ({
-						name: p.displayName,
-						utrProfileId: p.id,
-						gradClassName: p.playerHighSchoolDetails?.gradClassName,
-						gradYear: p.playerHighSchoolDetails?.gradYear,
-						latitude: p.location?.latLng?.[0],
-						longitude: p.location?.latLng?.[1],
-						location: p.location?.display
-					})),
+				responseProfiles.map(p => ({
+					name: p.displayName,
+					utrProfileId: p.id,
+					gradClassName: p.playerHighSchoolDetails?.gradClassName,
+					gradYear: p.playerHighSchoolDetails?.gradYear,
+					latitude: p.location?.latLng?.[0],
+					longitude: p.location?.latLng?.[1],
+					location: p.location?.display
+				})),
 				// adds `ON CONFLICT DO NOTHING` to the query
 				// because UTR ids are unique, only creates new players if they don't exist
 				{ ignoreDuplicates: true }
@@ -86,23 +103,24 @@ export class UTR {
 	}
 }
 
+interface UTRSource {
+	id: number;
+	displayName: string;
+	myUtrSingles: number;
+	myUtrDoubles: number;
+	location: {
+		display: string; // never null, just empty string
+		latLng: number[] | null;
+	} | null;
+	playerHighSchoolDetails: {
+		gradClassName: string;
+		gradYear: Date;
+	} | null;
+}
 export interface UTRResponse {
 	total: number;
 	totalAllowed: number;
 	hits: Array<{
-		source: {
-			id: number;
-			displayName: string;
-			myUtrSingles: number;
-			myUtrDoubles: number;
-			location: {
-				display: string; // never null, just empty string
-				latLng: number[] | null;
-			} | null;
-			playerHighSchoolDetails: {
-				gradClassName: string;
-				gradYear: Date;
-			} | null;
-		};
+		source: UTRSource;
 	}>;
 }
