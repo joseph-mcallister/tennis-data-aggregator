@@ -23,7 +23,7 @@ export class TR {
 	playerPageUrl = 'https://www.tennisrecruiting.net/player.asp?id=806092';
 
 	private async _setup() {
-		this.browser = await puppeteer.launch({ headless: false });
+		this.browser = await puppeteer.launch({ headless: true });
 	}
 
 	private async _signIn() {

@@ -9,6 +9,11 @@ import { Parser } from 'json2csv';
 const app = express();
 const utr = new UTR();
 
+app.get('/health', async (req, res) => {
+	console.log('recieved health check');
+	return res.json(200);
+});
+
 app.get('/', async (req, res) => {
 	await utr.login();
 	const players = await utr.fetchPlayers(12, 12.04, 0.02);
