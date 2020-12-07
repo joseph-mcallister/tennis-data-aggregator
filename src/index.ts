@@ -14,9 +14,11 @@ app.get('/health', async (req, res) => {
 	return res.json(200);
 });
 
-app.get('/', async (req, res) => {
+app.get('/', async (req: express.Request, res) => {
 	await utr.login();
-	const players = await utr.fetchPlayers(12, 12.04, 0.02);
+	const startRating = parseFloat(req.query.startRating as string);
+	const endRating = parseFloat(req.query.endRating as string);
+	const players = await utr.fetchPlayers(startRating, endRating, 0.02);
 	const fields = [
 		{
 			label: 'displayName',
@@ -43,6 +45,7 @@ app.get('/', async (req, res) => {
 	const csv = json2csv.parse(players);
 	res.header('Content-Type', 'text/csv');
 	res.attachment(`players-${new Date().toDateString()}.csv`);
+	console.log('returning csv');
 	return res.send(csv);
 });
 
