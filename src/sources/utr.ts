@@ -9,7 +9,10 @@ export class UTR {
 	private jwt: string | null = null;
 
 	async login() {
-		const res = await axios.post('https://app.myutr.com/api/v1/auth/login', config.utr);
+		const res = await axios.post(
+			'https://app.universaltennis.com/api/v1/auth/login',
+			config.utr
+		);
 
 		this.jwt = res.headers['jwt-token'];
 	}

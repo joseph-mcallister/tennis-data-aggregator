@@ -18,6 +18,7 @@ app.get('/', async (req: express.Request, res) => {
 	await utr.login();
 	const startRating = parseFloat(req.query.startRating as string);
 	const endRating = parseFloat(req.query.endRating as string);
+	const isJsonOutput = req.query.json && req.query.json === 'true';
 	const players = await utr.fetchPlayers(startRating, endRating, 0.02);
 	const fields = [
 		{
@@ -41,6 +42,9 @@ app.get('/', async (req: express.Request, res) => {
 			value: 'location.display'
 		}
 	];
+	if (isJsonOutput) {
+		return res.json(players);
+	}
 	const json2csv = new Parser({ fields });
 	const csv = json2csv.parse(players);
 	res.header('Content-Type', 'text/csv');
@@ -54,11 +58,11 @@ app.listen(port, () => {
 	console.log(`server started at http://localhost:${port}`);
 });
 
-const sequelize = new Sequelize({
-	dialect: 'postgres', // Aurora is both MySQL- and Postgres-compatible
-	...config.dbConnection,
-	models: [__dirname + '/models']
-});
+// const sequelize = new Sequelize({
+// 	dialect: 'postgres', // Aurora is both MySQL- and Postgres-compatible
+// 	...config.dbConnection,
+// 	models: [__dirname + '/models']
+// });
 
 // Default Lambda handler is `index.handler`
 export function handler() {
