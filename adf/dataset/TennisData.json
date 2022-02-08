@@ -1,0 +1,54 @@
+{
+	"name": "TennisData",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "tennisblobstorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "players",
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "players.xlsx",
+				"container": "tennis-data"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "name",
+				"type": "String"
+			},
+			{
+				"name": "initial_singles_utr",
+				"type": "String"
+			},
+			{
+				"name": "latest_singles_utr",
+				"type": "String"
+			},
+			{
+				"name": "initial_doubles_utr",
+				"type": "String"
+			},
+			{
+				"name": "grad_year",
+				"type": "String"
+			},
+			{
+				"name": "location",
+				"type": "String"
+			},
+			{
+				"name": "date_first_added",
+				"type": "String"
+			},
+			{
+				"name": "last_updated",
+				"type": "String"
+			}
+		]
+	}
+}
