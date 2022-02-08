@@ -1,0 +1,9 @@
+{
+	"name": "tennis-data-aggregator-etl",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "e850cdff-a92b-4703-9fb4-4cbe259ffda1",
+		"tenantId": "1fa57427-107a-4114-baac-a4541a587fbb"
+	}
+}
