@@ -1,23 +1,22 @@
 {
-	"name": "TennisDataExcel",
+	"name": "TennisDataCSV",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "tennisblobstorage",
 			"type": "LinkedServiceReference"
 		},
-		"folder": {
-			"name": "Old"
-		},
 		"annotations": [],
-		"type": "Excel",
+		"type": "DelimitedText",
 		"typeProperties": {
-			"sheetName": "players",
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "players.xlsx",
+				"fileName": "players.csv",
 				"container": "tennis-data"
 			},
-			"firstRowAsHeader": true
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
 		},
 		"schema": [
 			{
