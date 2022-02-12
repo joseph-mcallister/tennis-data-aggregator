@@ -13,7 +13,7 @@
 		},
 		"RestService1_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "http://20.119.248.172:3000?startRating=11&endRating=11.1&json=true"
+			"defaultValue": "http://20.119.248.172:3000?startRating=11&endRating=13&json=true"
 		},
 		"containerUri": {
 			"type": "string",
