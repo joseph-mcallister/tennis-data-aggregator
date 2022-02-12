@@ -10,7 +10,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "latest_utr",
 				"folderPath": "tmp",
 				"container": "tennis-data"
 			},
