@@ -19,7 +19,11 @@
 					"name": "excel"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "NewNames"
@@ -44,9 +48,12 @@
 				},
 				{
 					"name": "Union1"
+				},
+				{
+					"name": "OrderColumns"
 				}
 			],
-			"script": "source(output(\n\t\tlocation as string,\n\t\tsingles_utr as string,\n\t\tdoubles_utr as string,\n\t\tgrad as string,\n\t\tage as string,\n\t\tfirst_name as string,\n\t\tlast_name as string,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> utrdata\nsource(output(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> excel\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:true,\n\tbroadcast: 'auto')~> NewNames\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:false,\n\tbroadcast: 'auto')~> ExistingNames\nExistingNames, excel join(utrdata@name == excel@name,\n\tjoinType:'right',\n\tbroadcast: 'auto')~> Join1\nJoin1 select(mapColumn(\n\t\tname = excel@name,\n\t\tsingles_utr,\n\t\tlocation = excel@location,\n\t\tinitial_singles_utr,\n\t\tdoubles_utr = initial_doubles_utr,\n\t\tgrad_year,\n\t\tcurrent_singles_utr = singles_utr,\n\t\tdate_first_added\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(last_updated = iifNull(singles_utr, toString(currentDate('America/New_York')), date_first_added),\n\t\tdate_first_added = iifNull(singles_utr, toString(currentDate('America/New_York')), date_first_added),\n\t\tsingles_utr = iifNull(singles_utr, initial_singles_utr, singles_utr)) ~> DerivedColumn1\nNewNames derive(grad_year = grad,\n\t\tdate_first_added = toString(currentDate('America/New_York')),\n\t\tlast_updated = toString(currentDate('America/New_York')),\n\t\tinitial_singles_utr = singles_utr) ~> DerivedColumn2\nDerivedColumn2 select(mapColumn(\n\t\tname,\n\t\tlocation,\n\t\tinitial_singles_utr,\n\t\tsingles_utr,\n\t\tdoubles_utr,\n\t\tgrad_year,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select2\nDerivedColumn1, Select2 union(byName: true)~> Union1"
+			"script": "source(output(\n\t\tlocation as string,\n\t\tsingles_utr as string,\n\t\tdoubles_utr as string,\n\t\tgrad as string,\n\t\tage as string,\n\t\tfirst_name as string,\n\t\tlast_name as string,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> utrdata\nsource(output(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> excel\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:true,\n\tbroadcast: 'auto')~> NewNames\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:false,\n\tbroadcast: 'auto')~> ExistingNames\nExistingNames, excel join(utrdata@name == excel@name,\n\tjoinType:'right',\n\tbroadcast: 'auto')~> Join1\nJoin1 select(mapColumn(\n\t\tname = excel@name,\n\t\tsingles_utr,\n\t\tlocation = excel@location,\n\t\tinitial_singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tcurrent_singles_utr = singles_utr,\n\t\tdate_first_added\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(last_updated = iifNull(singles_utr, toString(currentDate('America/New_York')), date_first_added),\n\t\tdate_first_added = iifNull(singles_utr, toString(currentDate('America/New_York')), date_first_added),\n\t\tlatest_singles_utr = iifNull(singles_utr, initial_singles_utr, singles_utr)) ~> DerivedColumn1\nNewNames derive(grad_year = grad,\n\t\tdate_first_added = toString(currentDate('America/New_York')),\n\t\tlast_updated = toString(currentDate('America/New_York')),\n\t\tinitial_singles_utr = singles_utr) ~> DerivedColumn2\nDerivedColumn2 select(mapColumn(\n\t\tname,\n\t\tlocation,\n\t\tinitial_singles_utr,\n\t\tsingles_utr,\n\t\tinitial_doubles_utr = doubles_utr,\n\t\tgrad_year,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select2\nDerivedColumn1, Select2 union(byName: true)~> Union1\nUnion1 select(mapColumn(\n\t\tname,\n\t\tinitial_singles_utr,\n\t\tlatest_singles_utr,\n\t\tdoubles_utr = initial_doubles_utr,\n\t\tgrad_year,\n\t\tlocation,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> OrderColumns\nOrderColumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
 		}
 	}
 }
