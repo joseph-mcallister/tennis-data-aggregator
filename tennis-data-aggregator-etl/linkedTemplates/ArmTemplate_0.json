@@ -1,0 +1,306 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "tennis-data-aggregator-etl"
+		},
+		"tennisblobstorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'tennisblobstorage'"
+		},
+		"RestService1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "http://20.119.248.172:3000?startRating=11&endRating=11.1&json=true"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/RestService1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('RestService1_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/tennisblobstorage')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('tennisblobstorage_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TennisData')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "tennisblobstorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "players",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "players.xlsx",
+						"container": "tennis-data"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "name",
+						"type": "String"
+					},
+					{
+						"name": "initial_singles_utr",
+						"type": "String"
+					},
+					{
+						"name": "latest_singles_utr",
+						"type": "String"
+					},
+					{
+						"name": "initial_doubles_utr",
+						"type": "String"
+					},
+					{
+						"name": "grad_year",
+						"type": "String"
+					},
+					{
+						"name": "location",
+						"type": "String"
+					},
+					{
+						"name": "date_first_added",
+						"type": "String"
+					},
+					{
+						"name": "last_updated",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/tennisblobstorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/UTREndpoint')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "RestService1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/RestService1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LatestUTR')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "tennisblobstorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "latest_utr",
+						"container": "tennis-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/tennisblobstorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/JoinNewNames')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "UTREndpoint",
+								"type": "DatasetReference"
+							},
+							"name": "utrdata"
+						},
+						{
+							"dataset": {
+								"referenceName": "TennisData",
+								"type": "DatasetReference"
+							},
+							"name": "excel"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "LatestUTR",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Select1"
+						},
+						{
+							"name": "ConcatName"
+						},
+						{
+							"name": "NewNames"
+						},
+						{
+							"name": "ExistingNames"
+						},
+						{
+							"name": "AddExistingFlagTrue"
+						},
+						{
+							"name": "AddExistingFlagFalse"
+						}
+					],
+					"script": "source(output(\n\t\tbody as (age as string, ageRange as string, availableResultYearsDoubles as string, availableResultYearsSingles as string, backhand as string, birthPlace as string, claimable as boolean, claimed as boolean, clubMemberships as (clubId as integer, clubMembershipTags as string[], id as integer, intialJoinDate as string, isPower as boolean, name as string, roleId as short, roleValue as string, tierTypeId as short, tierTypeName as string, typeId as short, typeValue as string)[], clubs as string, coachingExperienceStatus as string, coachingExperienceTypeId as string, collegeRecruiting as boolean, defaultPaidHitPrice as string, descriptionLong as string, descriptionShort as string, displayName as string, dominantHand as string, doublesUtr as double, eligibleForPaidHit as string, firstName as string, gender as string, heightInches as short, homeClub as string, id as integer, isAgeKnownAndBelow14 as boolean, isAnonymous as boolean, isDemoPlayer as boolean, isPaidHitter as string, isPowered as boolean, isPoweredByClub as boolean, isPoweredBySubscription as boolean, isPro as boolean, lastName as string, location as (display as string, googleFormattedName as string, latLng as double[]), memberClaimed as string, memberId as integer, myUtrDoubles as double, myUtrProgressDoubles as short, myUtrProgressSingles as short, myUtrSingles as double, myUtrStatusDoubles as string, myUtrStatusSingles as string, nationality as string, playAvailability as string[], playerCollege as (conference as (conferenceName as string, division as (divisionName as string, id as boolean, shortName as string), divisionId as string, id as short, shortName as string), conferenceId as short, countryId as short, dataImportId as short, dateCreated as string, dateLastUpdated as string, displayName as string, existingClubSubTypeIds as short[], gender as (female as boolean, male as boolean), id as short, location as string, locationCityId as short, locationId as short, mensClubId as short, mensClubProfilePhotoUrl as string, mixedClubId as boolean, mixedClubProfilePhotoUrl as string, name as string, nickname as string, p6menHigh as double, p6menLow as double, p6womenHigh as double, p6womenLow as double, power6Men as short, power6Women as short, private as boolean, shortName as string, stateId as short, top6UtrFemale as string, top6UtrMale as string, type as string, womensClubId as short, womensClubProfilePhotoUrl as string), playerCollegeDetails as (gradClassName as string, gradYear as string), playerExperienceStatus as string, playerExperienceTypeId as string, playerHighSchool as (conference as string, conferenceId as string, countryId as short, dataImportId as string, dateCreated as string, dateLastUpdated as string, displayName as string, existingClubSubTypeIds as short[], gender as (female as boolean, male as boolean), id as integer, location as (cityAbbr as string, cityName as string, cityStateZip as string, countryCode2 as string, countryCode3 as string, countryIoc as string, countryName as string, display as string, googleFormattedName as string, latLng as double[], placeName as string, stateAbbr as string, stateName as string, streetAddress as string), locationCityId as short, locationId as integer, mensClubId as short, mensClubProfilePhotoUrl as string, mixedClubId as boolean, mixedClubProfilePhotoUrl as string, name as string, nickname as string, p6menHigh as double, p6menLow as double, p6womenHigh as double, p6womenLow as double, power6Men as short, power6Women as short, private as boolean, shortName as string, stateId as short, top6UtrFemale as string, top6UtrMale as string, type as string, womensClubId as short, womensClubProfilePhotoUrl as string), playerHighSchoolDetails as (gradClassName as string, gradYear as string), playerProfileImages as (card as (oneX as string, threeX as string, twoX as string), default as string, icon as (oneX as string, threeX as string, twoX as string), profile as (oneX as string, threeX as string, twoX as string), thumbnail as (oneX as string, threeX as string, twoX as string)), profileId as integer, profileImage as string, rankings as (rank as short, rankListId as short, rankingCategories as (label as string, subtype as string, type as string, value as string)[])[], ratingProgressDoubles as short, ratingProgressSingles as short, ratingStatusDoubles as string, ratingStatusSingles as string, showDecimals as boolean, singlesUtr as double, thirdPartyRankings as (publishedDate as string, rank as short, source as string, type as string)[], threeMonthRating as double, threeMonthRatingChangeDetails as (changeDirection as string, rating as double, ratingDifference as double), tmsEvents as string, utrRange as string),\n\t\theaders as [string,string]\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\thttpMethod: 'GET',\n\ttimeout: 1000,\n\trequestInterval: 0,\n\tpaginationRules: ['supportRFC5988' -> 'true'],\n\tresponseFormat: ['type' -> 'json', 'documentForm' -> 'documentPerLine'],\n\tpartitionBy('hash', 1)) ~> utrdata\nsource(output(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> excel\nutrdata select(mapColumn(\n\t\tlocation = body.location.display,\n\t\tsingles_utr = body.myUtrSingles,\n\t\tdoubles_utr = body.doublesUtr,\n\t\tgrad = body.playerCollegeDetails.gradYear,\n\t\tage = body.age,\n\t\tfirstName = body.firstName,\n\t\tlastName = body.lastName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(fullName = firstName + \" \" + lastName) ~> ConcatName\nConcatName, excel exists(fullName == name,\n\tnegate:true,\n\tbroadcast: 'auto')~> NewNames\nConcatName, excel exists(fullName == name,\n\tnegate:false,\n\tbroadcast: 'auto')~> ExistingNames\nExistingNames derive(existing = true()) ~> AddExistingFlagTrue\nNewNames derive(existing = false()) ~> AddExistingFlagFalse\nAddExistingFlagTrue sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/UTREndpoint')]",
+				"[concat(variables('factoryId'), '/datasets/TennisData')]",
+				"[concat(variables('factoryId'), '/datasets/LatestUTR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/FetchLatestUTR')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "UTREndpoint",
+								"type": "DatasetReference"
+							},
+							"name": "utrdata"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "LatestUTR",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "Select1"
+						},
+						{
+							"name": "ConcatName"
+						}
+					],
+					"script": "source(output(\n\t\tbody as (age as string, ageRange as string, availableResultYearsDoubles as string, availableResultYearsSingles as string, backhand as string, birthPlace as string, claimable as boolean, claimed as boolean, clubMemberships as (clubId as integer, clubMembershipTags as string[], id as integer, intialJoinDate as string, isPower as boolean, name as string, roleId as short, roleValue as string, tierTypeId as short, tierTypeName as string, typeId as short, typeValue as string)[], clubs as string, coachingExperienceStatus as string, coachingExperienceTypeId as string, collegeRecruiting as boolean, defaultPaidHitPrice as string, descriptionLong as string, descriptionShort as string, displayName as string, dominantHand as string, doublesUtr as double, eligibleForPaidHit as string, firstName as string, gender as string, heightInches as short, homeClub as string, id as integer, isAgeKnownAndBelow14 as boolean, isAnonymous as boolean, isDemoPlayer as boolean, isPaidHitter as string, isPowered as boolean, isPoweredByClub as boolean, isPoweredBySubscription as boolean, isPro as boolean, lastName as string, location as (display as string, googleFormattedName as string, latLng as double[]), memberClaimed as string, memberId as integer, myUtrDoubles as double, myUtrProgressDoubles as short, myUtrProgressSingles as short, myUtrSingles as double, myUtrStatusDoubles as string, myUtrStatusSingles as string, nationality as string, playAvailability as string[], playerCollege as (conference as (conferenceName as string, division as (divisionName as string, id as boolean, shortName as string), divisionId as string, id as short, shortName as string), conferenceId as short, countryId as short, dataImportId as short, dateCreated as string, dateLastUpdated as string, displayName as string, existingClubSubTypeIds as short[], gender as (female as boolean, male as boolean), id as short, location as string, locationCityId as short, locationId as short, mensClubId as short, mensClubProfilePhotoUrl as string, mixedClubId as boolean, mixedClubProfilePhotoUrl as string, name as string, nickname as string, p6menHigh as double, p6menLow as double, p6womenHigh as double, p6womenLow as double, power6Men as short, power6Women as short, private as boolean, shortName as string, stateId as short, top6UtrFemale as string, top6UtrMale as string, type as string, womensClubId as short, womensClubProfilePhotoUrl as string), playerCollegeDetails as (gradClassName as string, gradYear as string), playerExperienceStatus as string, playerExperienceTypeId as string, playerHighSchool as (conference as string, conferenceId as string, countryId as short, dataImportId as string, dateCreated as string, dateLastUpdated as string, displayName as string, existingClubSubTypeIds as short[], gender as (female as boolean, male as boolean), id as integer, location as (cityAbbr as string, cityName as string, cityStateZip as string, countryCode2 as string, countryCode3 as string, countryIoc as string, countryName as string, display as string, googleFormattedName as string, latLng as double[], placeName as string, stateAbbr as string, stateName as string, streetAddress as string), locationCityId as short, locationId as integer, mensClubId as short, mensClubProfilePhotoUrl as string, mixedClubId as boolean, mixedClubProfilePhotoUrl as string, name as string, nickname as string, p6menHigh as double, p6menLow as double, p6womenHigh as double, p6womenLow as double, power6Men as short, power6Women as short, private as boolean, shortName as string, stateId as short, top6UtrFemale as string, top6UtrMale as string, type as string, womensClubId as short, womensClubProfilePhotoUrl as string), playerHighSchoolDetails as (gradClassName as string, gradYear as string), playerProfileImages as (card as (oneX as string, threeX as string, twoX as string), default as string, icon as (oneX as string, threeX as string, twoX as string), profile as (oneX as string, threeX as string, twoX as string), thumbnail as (oneX as string, threeX as string, twoX as string)), profileId as integer, profileImage as string, rankings as (rank as short, rankListId as short, rankingCategories as (label as string, subtype as string, type as string, value as string)[])[], ratingProgressDoubles as short, ratingProgressSingles as short, ratingStatusDoubles as string, ratingStatusSingles as string, showDecimals as boolean, singlesUtr as double, thirdPartyRankings as (publishedDate as string, rank as short, source as string, type as string)[], threeMonthRating as double, threeMonthRatingChangeDetails as (changeDirection as string, rating as double, ratingDifference as double), tmsEvents as string, utrRange as string),\n\t\theaders as [string,string]\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\thttpMethod: 'GET',\n\ttimeout: 1000,\n\trequestInterval: 0,\n\tpaginationRules: ['supportRFC5988' -> 'true'],\n\tresponseFormat: ['type' -> 'json', 'documentForm' -> 'documentPerLine'],\n\tpartitionBy('hash', 1)) ~> utrdata\nutrdata select(mapColumn(\n\t\tlocation = body.location.display,\n\t\tsingles_utr = body.myUtrSingles,\n\t\tdoubles_utr = body.doublesUtr,\n\t\tgrad = body.playerCollegeDetails.gradYear,\n\t\tage = body.age,\n\t\tfirst_name = body.firstName,\n\t\tlast_name = body.lastName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(name = first_name + \" \" + last_name) ~> ConcatName\nConcatName sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/UTREndpoint')]",
+				"[concat(variables('factoryId'), '/datasets/LatestUTR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/LatestUTRDataToBlobStorage')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "FetchLatestUTR",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"utrdata": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/FetchLatestUTR')]"
+			]
+		}
+	]
+}
