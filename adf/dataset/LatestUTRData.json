@@ -1,5 +1,5 @@
 {
-	"name": "LatestUTR",
+	"name": "LatestUTRData",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "tennisblobstorage",

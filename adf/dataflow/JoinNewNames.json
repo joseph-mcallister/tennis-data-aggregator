@@ -6,14 +6,14 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "LatestUTR",
+						"referenceName": "LatestUTRData",
 						"type": "DatasetReference"
 					},
 					"name": "utrdata"
 				},
 				{
 					"dataset": {
-						"referenceName": "TennisData",
+						"referenceName": "TennisDataExcel",
 						"type": "DatasetReference"
 					},
 					"name": "excel"
@@ -22,7 +22,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "LatestUTR",
+						"referenceName": "LatestUTRData",
 						"type": "DatasetReference"
 					},
 					"name": "sink1"

@@ -1,5 +1,5 @@
 {
-	"name": "UTREndpoint",
+	"name": "UtrRestEndpoint",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "RestService1",
