@@ -18,6 +18,39 @@
 			"firstRowAsHeader": true,
 			"quoteChar": "\""
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "location",
+				"type": "String"
+			},
+			{
+				"name": "singles_utr",
+				"type": "String"
+			},
+			{
+				"name": "doubles_utr",
+				"type": "String"
+			},
+			{
+				"name": "grad",
+				"type": "String"
+			},
+			{
+				"name": "age",
+				"type": "String"
+			},
+			{
+				"name": "first_name",
+				"type": "String"
+			},
+			{
+				"name": "last_name",
+				"type": "String"
+			},
+			{
+				"name": "name",
+				"type": "String"
+			}
+		]
 	}
 }
