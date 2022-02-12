@@ -1,0 +1,23 @@
+{
+	"name": "LatestUTR",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "tennisblobstorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "latest_utr",
+				"container": "tennis-data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
