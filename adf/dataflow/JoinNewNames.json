@@ -13,7 +13,7 @@
 				},
 				{
 					"dataset": {
-						"referenceName": "TennisDataExcel",
+						"referenceName": "TennisDataCSV",
 						"type": "DatasetReference"
 					},
 					"name": "excel"
