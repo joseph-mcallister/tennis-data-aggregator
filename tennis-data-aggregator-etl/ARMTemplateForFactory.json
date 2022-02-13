@@ -21,7 +21,7 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/ExtractNewNames')]",
+			"name": "[concat(parameters('factoryName'), '/TestJoinNewNames')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -45,14 +45,14 @@
 								"parameters": {},
 								"datasetParameters": {
 									"utrdata": {},
-									"excel": {},
+									"csvdata": {},
 									"sink1": {}
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "MainIR10MinTTL",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -62,10 +62,14 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
+				"folder": {
+					"name": "TestPipelines"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/JoinNewNames')]"
+				"[concat(variables('factoryId'), '/dataflows/JoinNewNames')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/MainIR10MinTTL')]"
 			]
 		},
 		{
@@ -97,9 +101,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "MainIR10MinTTL",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -109,10 +113,14 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
+				"folder": {
+					"name": "TestPipelines"
+				},
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/FetchLatestUTR')]"
+				"[concat(variables('factoryId'), '/dataflows/FetchLatestUTR')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/MainIR10MinTTL')]"
 			]
 		},
 		{
@@ -211,9 +219,9 @@
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "MainIR10MinTTL",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -244,14 +252,14 @@
 								"parameters": {},
 								"datasetParameters": {
 									"utrdata": {},
-									"excel": {},
+									"csvdata": {},
 									"sink1": {}
 								}
 							},
 							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
+							"integrationRuntime": {
+								"referenceName": "MainIR10MinTTL",
+								"type": "IntegrationRuntimeReference"
 							},
 							"traceLevel": "Fine"
 						}
@@ -267,6 +275,7 @@
 				"[concat(variables('factoryId'), '/datasets/TennisDataCSV')]",
 				"[concat(variables('factoryId'), '/datasets/TennisDataBackupCSV')]",
 				"[concat(variables('factoryId'), '/dataflows/FetchLatestUTR')]",
+				"[concat(variables('factoryId'), '/integrationRuntimes/MainIR10MinTTL')]",
 				"[concat(variables('factoryId'), '/dataflows/JoinNewNames')]"
 			]
 		},
@@ -521,7 +530,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/UtrRestEndpoint')]",
+			"name": "[concat(parameters('factoryName'), '/UTRRestEndpoint')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -576,7 +585,7 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "UtrRestEndpoint",
+								"referenceName": "UTRRestEndpoint",
 								"type": "DatasetReference"
 							},
 							"name": "utrdata"
@@ -603,7 +612,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/UtrRestEndpoint')]",
+				"[concat(variables('factoryId'), '/datasets/UTRRestEndpoint')]",
 				"[concat(variables('factoryId'), '/datasets/LatestUTRData')]"
 			]
 		},
@@ -627,7 +636,7 @@
 								"referenceName": "TennisDataCSV",
 								"type": "DatasetReference"
 							},
-							"name": "excel"
+							"name": "csvdata"
 						}
 					],
 					"sinks": [
@@ -647,25 +656,25 @@
 							"name": "ExistingNames"
 						},
 						{
-							"name": "Join1"
+							"name": "JoinOldDataWithUpdatd"
 						},
 						{
-							"name": "Select1"
+							"name": "SelectRelevantColumns"
 						},
 						{
-							"name": "DerivedColumn1"
+							"name": "UpdateDates2"
 						},
 						{
-							"name": "DerivedColumn2"
+							"name": "UpdateDates"
 						},
 						{
-							"name": "Select2"
+							"name": "SelectRelevantColumns2"
 						},
 						{
-							"name": "Union1"
+							"name": "UnionExistingWithNew"
 						},
 						{
-							"name": "OrderColumns"
+							"name": "OrderColumnsByDate"
 						},
 						{
 							"name": "AddSortableDates"
@@ -674,13 +683,33 @@
 							"name": "SortByDate"
 						}
 					],
-					"script": "source(output(\n\t\tlocation as string,\n\t\tsingles_utr as string,\n\t\tdoubles_utr as string,\n\t\tgrad as string,\n\t\tage as string,\n\t\tfirst_name as string,\n\t\tlast_name as string,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> utrdata\nsource(output(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> excel\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:true,\n\tbroadcast: 'auto')~> NewNames\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:false,\n\tbroadcast: 'auto')~> ExistingNames\nExistingNames, excel join(utrdata@name == excel@name,\n\tjoinType:'right',\n\tbroadcast: 'auto')~> Join1\nJoin1 select(mapColumn(\n\t\tname = excel@name,\n\t\tsingles_utr,\n\t\tlocation = excel@location,\n\t\tinitial_singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tcurrent_singles_utr = singles_utr,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(last_updated = iif(isNull(singles_utr), last_updated, :today_date),\n\t\tsingles_utr = iif(isNull(singles_utr), initial_singles_utr, singles_utr),\n\t\ttoday_date := toString(currentDate('America/New_York'), 'MM/dd/yyyy')) ~> DerivedColumn1\nNewNames derive(grad_year = grad,\n\t\tdate_first_added = :today_date,\n\t\tlast_updated = :today_date,\n\t\tinitial_singles_utr = singles_utr,\n\t\ttoday_date := toString(currentDate('America/New_York'), 'MM/dd/yyyy')) ~> DerivedColumn2\nDerivedColumn2 select(mapColumn(\n\t\tname,\n\t\tlocation,\n\t\tinitial_singles_utr,\n\t\tsingles_utr,\n\t\tinitial_doubles_utr = doubles_utr,\n\t\tgrad_year,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select2\nDerivedColumn1, Select2 union(byName: true)~> Union1\nSortByDate select(mapColumn(\n\t\tname,\n\t\tinitial_singles_utr,\n\t\tlatest_singles_utr = singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tlocation,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> OrderColumns\nUnion1 derive(sortable_date_updated = toDate(last_updated, 'MM/dd/yyyy'),\n\t\tsortable_date_added = toDate(date_first_added, 'MM/dd/yyyy')) ~> AddSortableDates\nAddSortableDates sort(desc(sortable_date_added, true),\n\tdesc(sortable_date_updated, true)) ~> SortByDate\nOrderColumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tpartitionFileNames:['players.csv'],\n\ttruncate: true,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+					"script": "source(output(\n\t\tlocation as string,\n\t\tsingles_utr as string,\n\t\tdoubles_utr as string,\n\t\tgrad as string,\n\t\tage as string,\n\t\tfirst_name as string,\n\t\tlast_name as string,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> utrdata\nsource(output(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> csvdata\nutrdata, csvdata exists(utrdata@name == csvdata@name,\n\tnegate:true,\n\tbroadcast: 'auto')~> NewNames\nutrdata, csvdata exists(utrdata@name == csvdata@name,\n\tnegate:false,\n\tbroadcast: 'auto')~> ExistingNames\nExistingNames, csvdata join(utrdata@name == csvdata@name,\n\tjoinType:'right',\n\tbroadcast: 'auto')~> JoinOldDataWithUpdatd\nJoinOldDataWithUpdatd select(mapColumn(\n\t\tname = csvdata@name,\n\t\tsingles_utr,\n\t\tlocation = csvdata@location,\n\t\tinitial_singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tcurrent_singles_utr = singles_utr,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectRelevantColumns\nSelectRelevantColumns derive(last_updated = iif(isNull(singles_utr), last_updated, :today_date),\n\t\tsingles_utr = iif(isNull(singles_utr), initial_singles_utr, singles_utr),\n\t\ttoday_date := toString(currentDate('America/New_York'), 'MM/dd/yyyy')) ~> UpdateDates2\nNewNames derive(grad_year = grad,\n\t\tdate_first_added = :today_date,\n\t\tlast_updated = :today_date,\n\t\tinitial_singles_utr = singles_utr,\n\t\ttoday_date := toString(currentDate('America/New_York'), 'MM/dd/yyyy')) ~> UpdateDates\nUpdateDates select(mapColumn(\n\t\tname,\n\t\tlocation,\n\t\tinitial_singles_utr,\n\t\tsingles_utr,\n\t\tinitial_doubles_utr = doubles_utr,\n\t\tgrad_year,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectRelevantColumns2\nUpdateDates2, SelectRelevantColumns2 union(byName: true)~> UnionExistingWithNew\nSortByDate select(mapColumn(\n\t\tname,\n\t\tinitial_singles_utr,\n\t\tlatest_singles_utr = singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tlocation,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> OrderColumnsByDate\nUnionExistingWithNew derive(sortable_date_updated = toDate(last_updated, 'MM/dd/yyyy'),\n\t\tsortable_date_added = toDate(date_first_added, 'MM/dd/yyyy')) ~> AddSortableDates\nAddSortableDates sort(desc(sortable_date_added, true),\n\tdesc(sortable_date_updated, true)) ~> SortByDate\nOrderColumnsByDate sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tpartitionFileNames:['players.csv'],\n\ttruncate: true,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/LatestUTRData')]",
 				"[concat(variables('factoryId'), '/datasets/TennisDataCSV')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MainIR10MinTTL')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 5,
+							"cleanup": false
+						}
+					}
+				}
+			},
+			"dependsOn": []
 		}
 	]
 }
