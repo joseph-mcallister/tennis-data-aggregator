@@ -6,7 +6,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "UtrRestEndpoint",
+						"referenceName": "UTRRestEndpoint",
 						"type": "DatasetReference"
 					},
 					"name": "utrdata"
