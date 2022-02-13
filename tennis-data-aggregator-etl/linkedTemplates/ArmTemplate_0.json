@@ -251,6 +251,71 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/TennisDataBackupCSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "tennisblobstorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@concat('backup-', utcNow(), '.csv')",
+							"type": "Expression"
+						},
+						"folderPath": "backups",
+						"container": "tennis-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "name",
+						"type": "String"
+					},
+					{
+						"name": "initial_singles_utr",
+						"type": "String"
+					},
+					{
+						"name": "latest_singles_utr",
+						"type": "String"
+					},
+					{
+						"name": "initial_doubles_utr",
+						"type": "String"
+					},
+					{
+						"name": "grad_year",
+						"type": "String"
+					},
+					{
+						"name": "location",
+						"type": "String"
+					},
+					{
+						"name": "date_first_added",
+						"type": "String"
+					},
+					{
+						"name": "last_updated",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/tennisblobstorage')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/JoinNewNames')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -267,7 +332,7 @@
 						},
 						{
 							"dataset": {
-								"referenceName": "TennisDataExcel",
+								"referenceName": "TennisDataCSV",
 								"type": "DatasetReference"
 							},
 							"name": "excel"
@@ -311,12 +376,11 @@
 							"name": "OrderColumns"
 						}
 					],
-					"script": "source(output(\n\t\tlocation as string,\n\t\tsingles_utr as string,\n\t\tdoubles_utr as string,\n\t\tgrad as string,\n\t\tage as string,\n\t\tfirst_name as string,\n\t\tlast_name as string,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> utrdata\nsource(output(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> excel\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:true,\n\tbroadcast: 'auto')~> NewNames\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:false,\n\tbroadcast: 'auto')~> ExistingNames\nExistingNames, excel join(utrdata@name == excel@name,\n\tjoinType:'right',\n\tbroadcast: 'auto')~> Join1\nJoin1 select(mapColumn(\n\t\tname = excel@name,\n\t\tsingles_utr,\n\t\tlocation = excel@location,\n\t\tinitial_singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tcurrent_singles_utr = singles_utr,\n\t\tdate_first_added\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(last_updated = iifNull(singles_utr, toString(currentDate('America/New_York')), date_first_added),\n\t\tdate_first_added = iifNull(singles_utr, toString(currentDate('America/New_York')), date_first_added),\n\t\tlatest_singles_utr = iifNull(singles_utr, initial_singles_utr, singles_utr)) ~> DerivedColumn1\nNewNames derive(grad_year = grad,\n\t\tdate_first_added = toString(currentDate('America/New_York')),\n\t\tlast_updated = toString(currentDate('America/New_York')),\n\t\tinitial_singles_utr = singles_utr) ~> DerivedColumn2\nDerivedColumn2 select(mapColumn(\n\t\tname,\n\t\tlocation,\n\t\tinitial_singles_utr,\n\t\tsingles_utr,\n\t\tinitial_doubles_utr = doubles_utr,\n\t\tgrad_year,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select2\nDerivedColumn1, Select2 union(byName: true)~> Union1\nUnion1 select(mapColumn(\n\t\tname,\n\t\tinitial_singles_utr,\n\t\tlatest_singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tlocation,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> OrderColumns\nOrderColumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
+					"script": "source(output(\n\t\tlocation as string,\n\t\tsingles_utr as string,\n\t\tdoubles_utr as string,\n\t\tgrad as string,\n\t\tage as string,\n\t\tfirst_name as string,\n\t\tlast_name as string,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> utrdata\nsource(output(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> excel\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:true,\n\tbroadcast: 'auto')~> NewNames\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:false,\n\tbroadcast: 'auto')~> ExistingNames\nExistingNames, excel join(utrdata@name == excel@name,\n\tjoinType:'right',\n\tbroadcast: 'auto')~> Join1\nJoin1 select(mapColumn(\n\t\tname = excel@name,\n\t\tsingles_utr,\n\t\tlocation = excel@location,\n\t\tinitial_singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tcurrent_singles_utr = singles_utr,\n\t\tdate_first_added\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(last_updated = iif(or(isNull(singles_utr),equals(singles_utr,\"\")), toString(currentDate('America/New_York')), date_first_added),\n\t\tdate_first_added = iif(or(isNull(singles_utr),equals(singles_utr,\"\")), toString(currentDate('America/New_York')), date_first_added),\n\t\tlatest_singles_utr = iif(or(isNull(singles_utr),equals(singles_utr,\"\")), initial_singles_utr, singles_utr)) ~> DerivedColumn1\nNewNames derive(grad_year = grad,\n\t\tdate_first_added = toString(currentDate('America/New_York')),\n\t\tlast_updated = toString(currentDate('America/New_York')),\n\t\tinitial_singles_utr = singles_utr) ~> DerivedColumn2\nDerivedColumn2 select(mapColumn(\n\t\tname,\n\t\tlocation,\n\t\tinitial_singles_utr,\n\t\tsingles_utr,\n\t\tinitial_doubles_utr = doubles_utr,\n\t\tgrad_year,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select2\nDerivedColumn1, Select2 union(byName: true)~> Union1\nUnion1 select(mapColumn(\n\t\tname,\n\t\tinitial_singles_utr,\n\t\tlatest_singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tlocation,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> OrderColumns\nOrderColumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> sink1"
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/LatestUTRData')]",
-				"[concat(variables('factoryId'), '/datasets/TennisDataExcel')]",
 				"[concat(variables('factoryId'), '/datasets/TennisDataCSV')]"
 			]
 		},
@@ -406,6 +470,106 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/FetchLatestUTR')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MainPipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "LatestUTRDataToBlobStorage",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Backup",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Execute Pipeline1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "TennisDataCSV",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "TennisDataBackupCSV",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/LatestUTRDataToBlobStorage')]",
+				"[concat(variables('factoryId'), '/datasets/TennisDataCSV')]",
+				"[concat(variables('factoryId'), '/datasets/TennisDataBackupCSV')]"
 			]
 		}
 	]
