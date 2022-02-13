@@ -1,5 +1,5 @@
 {
-	"name": "ExtractNewNames",
+	"name": "TestJoinNewNames",
 	"properties": {
 		"activities": [
 			{
@@ -19,9 +19,9 @@
 						"referenceName": "JoinNewNames",
 						"type": "DataFlowReference"
 					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
+					"integrationRuntime": {
+						"referenceName": "MainIR10MinTTL",
+						"type": "IntegrationRuntimeReference"
 					},
 					"traceLevel": "Fine"
 				}
