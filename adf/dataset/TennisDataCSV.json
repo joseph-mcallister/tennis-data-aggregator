@@ -11,6 +11,7 @@
 			"location": {
 				"type": "AzureBlobStorageLocation",
 				"fileName": "players.csv",
+				"folderPath": "latest",
 				"container": "tennis-data"
 			},
 			"columnDelimiter": ",",
