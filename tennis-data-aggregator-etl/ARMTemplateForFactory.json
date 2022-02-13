@@ -420,7 +420,7 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Execute Pipeline1",
+						"name": "StageUTRData",
 						"type": "ExecutePipeline",
 						"dependsOn": [],
 						"userProperties": [],
@@ -434,11 +434,11 @@
 						}
 					},
 					{
-						"name": "Backup",
+						"name": "BackupLastCopy",
 						"type": "Copy",
 						"dependsOn": [
 							{
-								"activity": "Execute Pipeline1",
+								"activity": "StageUTRData",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -499,6 +499,27 @@
 								"parameters": {}
 							}
 						]
+					},
+					{
+						"name": "ProcessUTRData",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "BackupLastCopy",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ExtractNewNames",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
 					}
 				],
 				"policy": {
@@ -510,7 +531,8 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/LatestUTRDataToBlobStorage')]",
 				"[concat(variables('factoryId'), '/datasets/TennisDataCSV')]",
-				"[concat(variables('factoryId'), '/datasets/TennisDataBackupCSV')]"
+				"[concat(variables('factoryId'), '/datasets/TennisDataBackupCSV')]",
+				"[concat(variables('factoryId'), '/pipelines/ExtractNewNames')]"
 			]
 		},
 		{
