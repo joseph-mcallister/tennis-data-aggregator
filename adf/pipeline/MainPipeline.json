@@ -3,24 +3,11 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "StageUTRData",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "LatestUTRDataToBlobStorage",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
-			},
-			{
 				"name": "BackupLastCopy",
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "StageUTRData",
+						"activity": "FetchLatestUTR",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -81,8 +68,32 @@
 				]
 			},
 			{
-				"name": "ProcessUTRData",
-				"type": "ExecutePipeline",
+				"name": "FetchLatestUTR",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "FetchLatestUTR",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "ExtractNewNames",
+				"type": "ExecuteDataFlow",
 				"dependsOn": [
 					{
 						"activity": "BackupLastCopy",
@@ -91,13 +102,24 @@
 						]
 					}
 				],
+				"policy": {
+					"timeout": "1.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
-					"pipeline": {
-						"referenceName": "ExtractNewNames",
-						"type": "PipelineReference"
+					"dataflow": {
+						"referenceName": "JoinNewNames",
+						"type": "DataFlowReference"
 					},
-					"waitOnCompletion": true
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
 				}
 			}
 		],
