@@ -189,6 +189,7 @@
 					"location": {
 						"type": "AzureBlobStorageLocation",
 						"fileName": "players.csv",
+						"folderPath": "latest",
 						"container": "tennis-data"
 					},
 					"columnDelimiter": ",",
@@ -423,7 +424,7 @@
 							"name": "SortByDate"
 						}
 					],
-					"script": "source(output(\n\t\tlocation as string,\n\t\tsingles_utr as string,\n\t\tdoubles_utr as string,\n\t\tgrad as string,\n\t\tage as string,\n\t\tfirst_name as string,\n\t\tlast_name as string,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> utrdata\nsource(output(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> excel\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:true,\n\tbroadcast: 'auto')~> NewNames\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:false,\n\tbroadcast: 'auto')~> ExistingNames\nExistingNames, excel join(utrdata@name == excel@name,\n\tjoinType:'right',\n\tbroadcast: 'auto')~> Join1\nJoin1 select(mapColumn(\n\t\tname = excel@name,\n\t\tsingles_utr,\n\t\tlocation = excel@location,\n\t\tinitial_singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tcurrent_singles_utr = singles_utr,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(last_updated = iif(isNull(singles_utr), last_updated, :today_date),\n\t\tsingles_utr = iif(isNull(singles_utr), initial_singles_utr, singles_utr),\n\t\ttoday_date := toString(currentDate('America/New_York'), 'MM/dd/yyyy')) ~> DerivedColumn1\nNewNames derive(grad_year = grad,\n\t\tdate_first_added = :today_date,\n\t\tlast_updated = :today_date,\n\t\tinitial_singles_utr = singles_utr,\n\t\ttoday_date := toString(currentDate('America/New_York'), 'MM/dd/yyyy')) ~> DerivedColumn2\nDerivedColumn2 select(mapColumn(\n\t\tname,\n\t\tlocation,\n\t\tinitial_singles_utr,\n\t\tsingles_utr,\n\t\tinitial_doubles_utr = doubles_utr,\n\t\tgrad_year,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select2\nDerivedColumn1, Select2 union(byName: true)~> Union1\nSortByDate select(mapColumn(\n\t\tname,\n\t\tinitial_singles_utr,\n\t\tlatest_singles_utr = singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tlocation,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> OrderColumns\nUnion1 derive(sortable_date_updated = toDate(last_updated, 'MM/dd/yyyy'),\n\t\tsortable_date_added = toDate(date_first_added, 'MM/dd/yyyy')) ~> AddSortableDates\nAddSortableDates sort(desc(sortable_date_added, true),\n\tdesc(sortable_date_updated, true)) ~> SortByDate\nOrderColumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+					"script": "source(output(\n\t\tlocation as string,\n\t\tsingles_utr as string,\n\t\tdoubles_utr as string,\n\t\tgrad as string,\n\t\tage as string,\n\t\tfirst_name as string,\n\t\tlast_name as string,\n\t\tname as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> utrdata\nsource(output(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinferDriftedColumnTypes: true,\n\tignoreNoFilesFound: false,\n\tpartitionBy('hash', 1)) ~> excel\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:true,\n\tbroadcast: 'auto')~> NewNames\nutrdata, excel exists(utrdata@name == excel@name,\n\tnegate:false,\n\tbroadcast: 'auto')~> ExistingNames\nExistingNames, excel join(utrdata@name == excel@name,\n\tjoinType:'right',\n\tbroadcast: 'auto')~> Join1\nJoin1 select(mapColumn(\n\t\tname = excel@name,\n\t\tsingles_utr,\n\t\tlocation = excel@location,\n\t\tinitial_singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tcurrent_singles_utr = singles_utr,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(last_updated = iif(isNull(singles_utr), last_updated, :today_date),\n\t\tsingles_utr = iif(isNull(singles_utr), initial_singles_utr, singles_utr),\n\t\ttoday_date := toString(currentDate('America/New_York'), 'MM/dd/yyyy')) ~> DerivedColumn1\nNewNames derive(grad_year = grad,\n\t\tdate_first_added = :today_date,\n\t\tlast_updated = :today_date,\n\t\tinitial_singles_utr = singles_utr,\n\t\ttoday_date := toString(currentDate('America/New_York'), 'MM/dd/yyyy')) ~> DerivedColumn2\nDerivedColumn2 select(mapColumn(\n\t\tname,\n\t\tlocation,\n\t\tinitial_singles_utr,\n\t\tsingles_utr,\n\t\tinitial_doubles_utr = doubles_utr,\n\t\tgrad_year,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select2\nDerivedColumn1, Select2 union(byName: true)~> Union1\nSortByDate select(mapColumn(\n\t\tname,\n\t\tinitial_singles_utr,\n\t\tlatest_singles_utr = singles_utr,\n\t\tinitial_doubles_utr,\n\t\tgrad_year,\n\t\tlocation,\n\t\tdate_first_added,\n\t\tlast_updated\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> OrderColumns\nUnion1 derive(sortable_date_updated = toDate(last_updated, 'MM/dd/yyyy'),\n\t\tsortable_date_added = toDate(date_first_added, 'MM/dd/yyyy')) ~> AddSortableDates\nAddSortableDates sort(desc(sortable_date_added, true),\n\tdesc(sortable_date_updated, true)) ~> SortByDate\nOrderColumns sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tname as string,\n\t\tinitial_singles_utr as string,\n\t\tlatest_singles_utr as string,\n\t\tinitial_doubles_utr as string,\n\t\tgrad_year as string,\n\t\tlocation as string,\n\t\tdate_first_added as string,\n\t\tlast_updated as string\n\t),\n\tpartitionFileNames:['players.csv'],\n\ttruncate: true,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
 				}
 			},
 			"dependsOn": [
@@ -533,25 +534,11 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "StageUTRData",
-						"type": "ExecutePipeline",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "LatestUTRDataToBlobStorage",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {}
-						}
-					},
-					{
 						"name": "BackupLastCopy",
 						"type": "Copy",
 						"dependsOn": [
 							{
-								"activity": "StageUTRData",
+								"activity": "FetchLatestUTR",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -614,8 +601,38 @@
 						]
 					},
 					{
-						"name": "ProcessUTRData",
-						"type": "ExecutePipeline",
+						"name": "FetchLatestUTR",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "FetchLatestUTR",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"utrdata": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "ExtractNewNames",
+						"type": "ExecuteDataFlow",
 						"dependsOn": [
 							{
 								"activity": "BackupLastCopy",
@@ -624,14 +641,31 @@
 								]
 							}
 						],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
 						"userProperties": [],
 						"typeProperties": {
-							"pipeline": {
-								"referenceName": "ExtractNewNames",
-								"type": "PipelineReference"
+							"dataflow": {
+								"referenceName": "JoinNewNames",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"utrdata": {},
+									"excel": {},
+									"sink1": {}
+								}
 							},
-							"waitOnCompletion": true,
-							"parameters": {}
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
 						}
 					}
 				],
@@ -642,10 +676,10 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/LatestUTRDataToBlobStorage')]",
 				"[concat(variables('factoryId'), '/datasets/TennisDataCSV')]",
 				"[concat(variables('factoryId'), '/datasets/TennisDataBackupCSV')]",
-				"[concat(variables('factoryId'), '/pipelines/ExtractNewNames')]"
+				"[concat(variables('factoryId'), '/dataflows/FetchLatestUTR')]",
+				"[concat(variables('factoryId'), '/dataflows/JoinNewNames')]"
 			]
 		}
 	]
