@@ -1,0 +1,35 @@
+{
+	"name": "FetchLatestUTR",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "UTRRestEndpoint",
+						"type": "DatasetReference"
+					},
+					"name": "utrdata"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "LatestUTRData",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Select1"
+				},
+				{
+					"name": "ConcatName"
+				}
+			],
+			"script": "source(output(\n\t\tbody as (age as string, ageRange as string, availableResultYearsDoubles as string, availableResultYearsSingles as string, backhand as string, birthPlace as string, claimable as boolean, claimed as boolean, clubMemberships as (clubId as integer, clubMembershipTags as string[], id as integer, intialJoinDate as string, isPower as boolean, name as string, roleId as short, roleValue as string, tierTypeId as short, tierTypeName as string, typeId as short, typeValue as string)[], clubs as string, coachingExperienceStatus as string, coachingExperienceTypeId as string, collegeRecruiting as boolean, defaultPaidHitPrice as string, descriptionLong as string, descriptionShort as string, displayName as string, dominantHand as string, doublesUtr as double, eligibleForPaidHit as string, firstName as string, gender as string, heightInches as short, homeClub as string, id as integer, isAgeKnownAndBelow14 as boolean, isAnonymous as boolean, isDemoPlayer as boolean, isPaidHitter as string, isPowered as boolean, isPoweredByClub as boolean, isPoweredBySubscription as boolean, isPro as boolean, lastName as string, location as (display as string, googleFormattedName as string, latLng as double[]), memberClaimed as string, memberId as integer, myUtrDoubles as double, myUtrProgressDoubles as short, myUtrProgressSingles as short, myUtrSingles as double, myUtrStatusDoubles as string, myUtrStatusSingles as string, nationality as string, playAvailability as string[], playerCollege as (conference as (conferenceName as string, division as (divisionName as string, id as boolean, shortName as string), divisionId as string, id as short, shortName as string), conferenceId as short, countryId as short, dataImportId as short, dateCreated as string, dateLastUpdated as string, displayName as string, existingClubSubTypeIds as short[], gender as (female as boolean, male as boolean), id as short, location as string, locationCityId as short, locationId as short, mensClubId as short, mensClubProfilePhotoUrl as string, mixedClubId as boolean, mixedClubProfilePhotoUrl as string, name as string, nickname as string, p6menHigh as double, p6menLow as double, p6womenHigh as double, p6womenLow as double, power6Men as short, power6Women as short, private as boolean, shortName as string, stateId as short, top6UtrFemale as string, top6UtrMale as string, type as string, womensClubId as short, womensClubProfilePhotoUrl as string), playerCollegeDetails as (gradClassName as string, gradYear as string), playerExperienceStatus as string, playerExperienceTypeId as string, playerHighSchool as (conference as string, conferenceId as string, countryId as short, dataImportId as string, dateCreated as string, dateLastUpdated as string, displayName as string, existingClubSubTypeIds as short[], gender as (female as boolean, male as boolean), id as integer, location as (cityAbbr as string, cityName as string, cityStateZip as string, countryCode2 as string, countryCode3 as string, countryIoc as string, countryName as string, display as string, googleFormattedName as string, latLng as double[], placeName as string, stateAbbr as string, stateName as string, streetAddress as string), locationCityId as short, locationId as integer, mensClubId as short, mensClubProfilePhotoUrl as string, mixedClubId as boolean, mixedClubProfilePhotoUrl as string, name as string, nickname as string, p6menHigh as double, p6menLow as double, p6womenHigh as double, p6womenLow as double, power6Men as short, power6Women as short, private as boolean, shortName as string, stateId as short, top6UtrFemale as string, top6UtrMale as string, type as string, womensClubId as short, womensClubProfilePhotoUrl as string), playerHighSchoolDetails as (gradClassName as string, gradYear as string), playerProfileImages as (card as (oneX as string, threeX as string, twoX as string), default as string, icon as (oneX as string, threeX as string, twoX as string), profile as (oneX as string, threeX as string, twoX as string), thumbnail as (oneX as string, threeX as string, twoX as string)), profileId as integer, profileImage as string, rankings as (rank as short, rankListId as short, rankingCategories as (label as string, subtype as string, type as string, value as string)[])[], ratingProgressDoubles as short, ratingProgressSingles as short, ratingStatusDoubles as string, ratingStatusSingles as string, showDecimals as boolean, singlesUtr as double, thirdPartyRankings as (publishedDate as string, rank as short, source as string, type as string)[], threeMonthRating as double, threeMonthRatingChangeDetails as (changeDirection as string, rating as double, ratingDifference as double), tmsEvents as string, utrRange as string),\n\t\theaders as [string,string]\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\thttpMethod: 'GET',\n\ttimeout: 1000,\n\trequestInterval: 0,\n\tpaginationRules: ['supportRFC5988' -> 'true'],\n\tresponseFormat: ['type' -> 'json', 'documentForm' -> 'documentPerLine'],\n\tpartitionBy('hash', 1)) ~> utrdata\nutrdata select(mapColumn(\n\t\tlocation = body.location.display,\n\t\tsingles_utr = body.myUtrSingles,\n\t\tdoubles_utr = body.doublesUtr,\n\t\tgrad = body.playerCollegeDetails.gradYear,\n\t\tage = body.age,\n\t\tfirst_name = body.firstName,\n\t\tlast_name = body.lastName\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 derive(name = first_name + \" \" + last_name) ~> ConcatName\nConcatName sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tinput(\n\t\tlocation as string,\n\t\tsingles_utr as string,\n\t\tdoubles_utr as string,\n\t\tgrad as string,\n\t\tage as string,\n\t\tfirst_name as string,\n\t\tlast_name as string,\n\t\tname as string\n\t),\n\ttruncate: true,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tpartitionBy('hash', 1)) ~> sink1"
+		}
+	}
+}

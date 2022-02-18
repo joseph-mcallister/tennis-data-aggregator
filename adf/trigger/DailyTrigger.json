@@ -1,0 +1,25 @@
+{
+	"name": "DailyTrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "MainPipeline",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-02-13T03:59:00",
+				"endTime": "2022-02-14T03:59:00",
+				"timeZone": "Eastern Standard Time"
+			}
+		}
+	}
+}

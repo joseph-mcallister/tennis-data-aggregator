@@ -1,0 +1,60 @@
+{
+	"name": "TennisDataBackupCSV",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "tennisblobstorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@concat('backup-', utcNow(), '.csv')",
+					"type": "Expression"
+				},
+				"folderPath": "backups",
+				"container": "tennis-data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "name",
+				"type": "String"
+			},
+			{
+				"name": "initial_singles_utr",
+				"type": "String"
+			},
+			{
+				"name": "latest_singles_utr",
+				"type": "String"
+			},
+			{
+				"name": "initial_doubles_utr",
+				"type": "String"
+			},
+			{
+				"name": "grad_year",
+				"type": "String"
+			},
+			{
+				"name": "location",
+				"type": "String"
+			},
+			{
+				"name": "date_first_added",
+				"type": "String"
+			},
+			{
+				"name": "last_updated",
+				"type": "String"
+			}
+		]
+	}
+}
