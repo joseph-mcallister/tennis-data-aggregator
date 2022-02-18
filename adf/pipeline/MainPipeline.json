@@ -72,7 +72,7 @@
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
-					"timeout": "1.00:00:00",
+					"timeout": "2:00:00",
 					"retry": 1,
 					"retryIntervalInSeconds": 300,
 					"secureOutput": false,
