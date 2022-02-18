@@ -1,5 +1,5 @@
 {
-	"name": "DailyTrigger",
+	"name": "Daily",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
@@ -17,7 +17,7 @@
 				"frequency": "Day",
 				"interval": 1,
 				"startTime": "2022-02-13T03:59:00",
-				"endTime": "2022-02-14T03:59:00",
+				"endTime": "2022-02-24T03:59:00",
 				"timeZone": "Eastern Standard Time"
 			}
 		}
