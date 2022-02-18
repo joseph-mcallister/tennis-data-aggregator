@@ -4,6 +4,14 @@ import { Player } from '../models/Player';
 import { UTREntry } from '../models/UTREntry';
 import assert from 'assert';
 import { UniqueConstraintError } from 'sequelize';
+import axiosRetry from 'axios-retry';
+
+axiosRetry(axios, {
+	retries: 3,
+	retryDelay: retryCount => {
+		return retryCount * 2000;
+	}
+});
 
 export class UTR {
 	private jwt: string | null = null;
