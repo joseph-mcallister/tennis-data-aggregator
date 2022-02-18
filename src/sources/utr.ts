@@ -29,7 +29,7 @@ export class UTR {
 
 	async fetchPlayers(minUtr: number, maxUtr: number, step = 0.02, primaryTags = `Junior`) {
 		const results: UTRSource[] = [];
-		for (let currMin = minUtr; currMin + step < maxUtr; currMin += step) {
+		for (let currMin = minUtr; currMin + step < maxUtr; currMin += step + 0.001) {
 			console.log({ currMin, currMax: currMin + step });
 			const res = await axios.get<UTRResponse>(
 				'https://agw-prod.myutr.com/v2/search/players' +
