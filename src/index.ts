@@ -19,7 +19,12 @@ app.get('/', async (req: express.Request, res) => {
 	const startRating = parseFloat(req.query.startRating as string);
 	const endRating = parseFloat(req.query.endRating as string);
 	const isJsonOutput = req.query.json && req.query.json === 'true';
-	const players = await utr.fetchPlayers(startRating, endRating, 0.02);
+	let players = undefined;
+	try {
+		players = await utr.fetchPlayers(startRating, endRating, 0.02);
+	} catch (err) {
+		return res.sendStatus(500);
+	}
 	const fields = [
 		{
 			label: 'displayName',
