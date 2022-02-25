@@ -1,5 +1,5 @@
 {
-	"name": "TwiceAWeek",
+	"name": "OnceEveryMonday",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
@@ -14,10 +14,21 @@
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
-				"frequency": "Day",
-				"interval": 3,
-				"startTime": "2022-02-25T12:00:00",
-				"timeZone": "Eastern Standard Time"
+				"frequency": "Week",
+				"interval": 1,
+				"startTime": "2022-02-25T07:00:00",
+				"timeZone": "Eastern Standard Time",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						7
+					],
+					"weekDays": [
+						"Monday"
+					]
+				}
 			}
 		}
 	}
