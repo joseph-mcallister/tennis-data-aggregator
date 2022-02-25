@@ -1,5 +1,5 @@
 {
-	"name": "Daily",
+	"name": "TwiceAWeek",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
@@ -15,9 +15,8 @@
 		"typeProperties": {
 			"recurrence": {
 				"frequency": "Day",
-				"interval": 1,
-				"startTime": "2022-02-13T03:59:00",
-				"endTime": "2022-02-24T03:59:00",
+				"interval": 3,
+				"startTime": "2022-02-25T12:00:00",
 				"timeZone": "Eastern Standard Time"
 			}
 		}
