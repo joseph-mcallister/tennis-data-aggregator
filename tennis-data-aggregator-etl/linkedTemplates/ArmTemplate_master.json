@@ -13,7 +13,7 @@
 		},
 		"RestService1_properties_typeProperties_url": {
 			"type": "string",
-			"defaultValue": "http://20.119.248.172:3000"
+			"defaultValue": "http://test-hweshhe5c2gabcgj.z01.azurefd.net/players"
 		},
 		"containerUri": {
 			"type": "string",
