@@ -541,7 +541,7 @@
 				"annotations": [],
 				"type": "RestResource",
 				"typeProperties": {
-					"relativeUrl": "?startRating=11&endRating=11.1&json=true"
+					"relativeUrl": "?startRating=11&endRating=13&json=true"
 				},
 				"schema": []
 			},
