@@ -14,7 +14,7 @@ app.get('/health', async (req, res) => {
 	return res.json(200);
 });
 
-app.get('/', async (req: express.Request, res) => {
+app.get('/players', async (req: express.Request, res) => {
 	await utr.login();
 	const startRating = parseFloat(req.query.startRating as string);
 	const endRating = parseFloat(req.query.endRating as string);
