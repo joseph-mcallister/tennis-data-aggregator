@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "RestService",
 		"typeProperties": {
-			"url": "http://20.119.248.172:3000",
+			"url": "http://test-hweshhe5c2gabcgj.z01.azurefd.net/players",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}

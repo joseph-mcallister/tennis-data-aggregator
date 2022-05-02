@@ -1,5 +1,5 @@
 {
-	"name": "Daily",
+	"name": "OnceEveryMonday",
 	"properties": {
 		"annotations": [],
 		"runtimeState": "Started",
@@ -14,11 +14,21 @@
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
-				"frequency": "Day",
+				"frequency": "Week",
 				"interval": 1,
-				"startTime": "2022-02-13T03:59:00",
-				"endTime": "2022-02-24T03:59:00",
-				"timeZone": "Eastern Standard Time"
+				"startTime": "2022-02-25T07:00:00",
+				"timeZone": "Eastern Standard Time",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						7
+					],
+					"weekDays": [
+						"Monday"
+					]
+				}
 			}
 		}
 	}
